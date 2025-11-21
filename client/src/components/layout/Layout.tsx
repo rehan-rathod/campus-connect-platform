@@ -14,6 +14,7 @@ import { Bell, Calendar, Menu, User } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { MOCK_NOTIFICATIONS } from "@/lib/mockData";
 import { Badge } from "@/components/ui/badge";
+import { MobileNav } from "@/components/domain/MobileNav";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, login, logout } = useAuth();
@@ -146,14 +147,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 pb-20 md:pb-0">
         {children}
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileNav />
 
       <footer className="border-t bg-muted/30 py-6 md:py-0">
         <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
           <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-            © 2025 CampusConnect. Built for the University Community.
+            © 2025 CampusConnect - ITM SLS Baroda University. Built for the University Community.
           </p>
         </div>
       </footer>
