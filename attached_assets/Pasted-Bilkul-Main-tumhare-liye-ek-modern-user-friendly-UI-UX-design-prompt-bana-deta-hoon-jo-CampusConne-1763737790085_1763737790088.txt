@@ -1,0 +1,332 @@
+Bilkul! Main tumhare liye ek modern, user-friendly UI/UX design prompt bana deta hoon jo CampusConnect platform ko professional aur attractive banaye:
+
+---
+
+**Build a Modern, User-Friendly UI/UX for Campus Event Management Platform**
+
+Create an intuitive, visually appealing interface that students and staff will love to use daily.
+
+## Design System & Visual Identity
+
+**Color Palette:**
+- Primary: Blue (#2563EB) - Trust, professionalism
+- Secondary: Purple (#7C3AED) - Creativity, engagement
+- Accent: Yellow (#F59E0B) - Energy, highlights
+- Success: Green (#10B981)
+- Warning: Orange (#F97316)
+- Error: Red (#EF4444)
+- Neutral: Gray scale (#F9FAFB to #111827)
+
+**Typography:**
+- Headings: Inter/Poppins (Bold, 600-700 weight)
+- Body: Inter/Open Sans (Regular, 400-500 weight)
+- Font sizes: 12px, 14px, 16px, 20px, 24px, 32px, 48px
+
+**Spacing System:** 
+- Use 4px base unit (4, 8, 12, 16, 24, 32, 48, 64px)
+
+## Homepage Design
+
+**Hero Section:**
+```
+- Full-width background image (campus photo with gradient overlay)
+- Large heading: "Discover Your Next Campus Experience"
+- Subheading: "The central hub for all university events"
+- Two prominent CTAs: "Browse Events" (primary blue) + "Organize Event" (outline)
+- Search bar with filters (date, category, location)
+- Animated elements: Smooth fade-in on scroll
+```
+
+**Navigation Bar:**
+```
+- Sticky header with blur background (glassmorphism)
+- Logo on left (colorful icon + "CampusConnect" text)
+- Menu: Home, Events, Dashboard, My Calendar
+- Right side: Notifications bell (with badge), Profile avatar
+- Mobile: Hamburger menu with smooth slide-in
+```
+
+**Featured Events Section:**
+```
+- Grid layout: 3 columns desktop, 2 tablet, 1 mobile
+- Card design:
+  * Event image (16:9 ratio, rounded corners)
+  * Category badge (top-left overlay)
+  * Title (bold, 18px)
+  * Date/time with calendar icon
+  * Location with pin icon
+  * Attendee count with user icons
+  * "View Details" button (hover effect: lift + shadow)
+- Skeleton loaders while data loads
+```
+
+**Browse by Category:**
+```
+- Horizontal scrollable cards
+- Each card: Icon + Category name + Event count
+- Hover: Scale up slightly + color change
+- Icons: Academic (book), Social (users), Sports (trophy), Music (music note)
+```
+
+## Events Listing Page
+
+**Layout:**
+```
+- Left sidebar (30%): Advanced filters
+  * Date range picker (calendar UI)
+  * Category checkboxes with icons
+  * Location dropdown
+  * Capacity slider
+  * "Apply Filters" button
+  
+- Main content (70%): Event cards
+  * List/Grid view toggle
+  * Sort options: Upcoming, Popular, Newest
+  * Pagination or infinite scroll
+  * Empty state: Friendly illustration + "No events found"
+```
+
+**Event Card (List View):**
+```
+- Horizontal layout
+- Left: Event image (200px square)
+- Middle: 
+  * Title + Category badge
+  * Date, time, location (with icons)
+  * Description preview (2 lines, truncated)
+  * Organizer info
+- Right:
+  * RSVP status
+  * Attendee avatars (overlapping circles)
+  * "View Details" button
+```
+
+## Event Details Page
+
+**Structure:**
+```
+1. Hero Section:
+   - Large event image (full-width)
+   - Gradient overlay at bottom
+   - Floating info card:
+     * Date, time, location
+     * RSVP count / capacity
+     * "Register Now" button (large, prominent)
+     * Share buttons (WhatsApp, Twitter, Copy link)
+
+2. Main Content (2-column layout):
+   
+   Left Column (65%):
+   - Event description (rich text)
+   - "About this event" with markdown support
+   - Tags (clickable chips)
+   - Organizer profile card
+   - Reviews/Ratings section:
+     * Star rating display
+     * Comment cards with user avatars
+     * "Write a review" button
+   
+   Right Column (35%):
+   - Sticky sidebar
+   - Registration info card:
+     * Seats available progress bar
+     * Price (if paid)
+     * Registration deadline countdown
+     * "Add to Calendar" button
+     * "Get Directions" button
+   - Related events carousel
+   - QR code (for organizers only)
+
+3. Interactive Map:
+   - Google Maps embed (400px height)
+   - Rounded corners, shadow
+   - "Get Directions" link below
+
+4. Recommended Events:
+   - "You might also like" section
+   - Horizontal scrollable cards
+```
+
+## Dashboard (Role-Based)
+
+**Admin Dashboard:**
+```
+- Top: Stats cards (4 columns)
+  * Total Events (icon + number + trend)
+  * Total Attendees
+  * Approval Pending (orange badge)
+  * Active Events
+  
+- Charts section:
+  * Line chart: Registrations over time
+  * Bar chart: Events by category
+  * Pie chart: Attendance rate
+  
+- Recent activity feed
+- Quick actions panel
+```
+
+**Organizer Dashboard:**
+```
+- "My Events" tab design:
+  * Create Event button (floating action button)
+  * Event cards with status badges:
+    - Draft (gray)
+    - Pending Approval (orange)
+    - Approved (green)
+    - Live (blue pulse animation)
+    - Completed (gray)
+  * Each card shows:
+    - Event thumbnail
+    - Title + date
+    - RSVP count vs capacity
+    - Quick actions: Edit, View Analytics, QR Code, Cancel
+```
+
+**Attendee Dashboard:**
+```
+- "My Events" with tabs:
+  * Registered
+  * Past Events
+  * Favorites
+  
+- Calendar view:
+  * Monthly grid
+  * Event dots on dates
+  * Click to see day's events
+  
+- Recommendations section
+```
+
+## Create/Edit Event Form
+
+**Multi-step Wizard Design:**
+```
+Step 1: Basic Info
+- Large image uploader (drag & drop)
+- Title input (large font)
+- Description textarea (markdown editor)
+- Category dropdown with icons
+- Tags input (chips)
+
+Step 2: Date & Location
+- Date picker (calendar UI)
+- Time pickers (start/end)
+- Location autocomplete (Google Places)
+- Map preview
+- Capacity input with slider
+
+Step 3: Settings
+- Registration options
+- Approval required toggle
+- Visibility settings (public/private)
+- Notification preferences
+
+Step 4: Review & Publish
+- Preview card
+- "Save as Draft" or "Submit for Approval"
+- Progress indicator at top (4 dots)
+```
+
+## Mobile-First Design
+
+**Bottom Navigation:**
+```
+- 5 icons: Home, Events, Create, Calendar, Profile
+- Active state: Icon color + label
+- Create button: Larger, centered, elevated
+```
+
+**Mobile Optimizations:**
+```
+- Swipeable event cards
+- Pull-to-refresh
+- Bottom sheets for filters
+- Full-screen modals for forms
+- Sticky "Register" button at bottom
+- Touch-friendly: Minimum 44px tap targets
+```
+
+## Micro-interactions & Animations
+
+**Delightful Details:**
+```
+- Loading states: Skeleton screens (not spinners)
+- Success animations: Confetti on RSVP
+- Hover effects: Subtle lift + shadow
+- Transitions: Smooth 200-300ms ease-out
+- Empty states: Friendly illustrations
+- Toast notifications: Slide from top
+- Button clicks: Ripple effect
+- Image loading: Blur-up technique
+```
+
+## Accessibility (WCAG AA)
+
+```
+- Color contrast ratio: Minimum 4.5:1
+- Focus indicators: Visible 2px blue outline
+- Keyboard navigation: Tab order logical
+- Screen reader labels: All icons + images
+- Alt text: Descriptive for all images
+- Form validation: Clear error messages
+- Skip to content link
+```
+
+## Component Examples
+
+**Button Styles:**
+```css
+Primary: bg-blue-600, white text, hover:bg-blue-700, rounded-lg, px-6 py-3
+Secondary: bg-white, blue text, border, hover:bg-gray-50
+Ghost: transparent, blue text, hover:bg-blue-50
+Icon: Square 40px, rounded-full, hover:bg-gray-100
+```
+
+**Card Styles:**
+```css
+- White background
+- Border: 1px solid gray-200
+- Rounded: 12px
+- Shadow: hover:shadow-lg (transition)
+- Padding: 20px
+```
+
+**Input Fields:**
+```css
+- Height: 44px
+- Rounded: 8px
+- Border: 1px solid gray-300
+- Focus: blue-500 ring
+- Icon inside: left padding 40px
+- Error state: Red border + shake animation
+```
+
+## Design Tools & Assets
+
+**Use:**
+- Tailwind CSS for styling
+- Heroicons/Lucide for icons
+- Framer Motion for animations
+- Headless UI for accessible components
+- React Hook Form for forms
+- Recharts for analytics charts
+
+**Illustrations:**
+- Use undraw.co or storyset.com for empty states
+- Consistent style across all illustrations
+
+---
+
+**Key Principles:**
+1. **Consistency:** Same patterns everywhere
+2. **Clarity:** Clear labels, obvious actions
+3. **Feedback:** Loading states, success messages, errors
+4. **Speed:** Fast loads, instant interactions
+5. **Delight:** Small animations that bring joy
+
+Build this UI so that a first-time user can register for an event within 30 seconds without any tutorial. Every interaction should feel natural and rewarding!
+
+---
+
+Yeh prompt dene se tumhe ek modern, user-friendly aur professional UI/UX milega jo hackathon judges ko impress karega! 🚀
