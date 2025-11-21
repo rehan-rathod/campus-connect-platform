@@ -23,6 +23,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/events", label: "Events" },
+    { href: "/analytics", label: "Analytics" },
     ...(user ? [{ href: "/dashboard", label: "Dashboard" }] : []),
   ];
 

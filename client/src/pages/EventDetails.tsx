@@ -2,7 +2,7 @@ import { useParams, Link } from "wouter";
 import { getEventById } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Users, ArrowLeft, Share2, CheckCircle } from "lucide-react";
+import { Calendar, MapPin, Users, ArrowLeft, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { QRCheckIn } from "@/components/domain/QRCheckIn";
@@ -10,6 +10,9 @@ import { ReviewsSection } from "@/components/domain/ReviewsSection";
 import { WaitlistComponent } from "@/components/domain/WaitlistComponent";
 import { AttendeeManagement } from "@/components/domain/AttendeeManagement";
 import { RecommendedEvents } from "@/components/domain/RecommendedEvents";
+import { CalendarExport } from "@/components/domain/CalendarExport";
+import { SocialShare } from "@/components/domain/SocialShare";
+import { EmailNotifications } from "@/components/domain/EmailNotifications";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function EventDetails() {
@@ -142,14 +145,16 @@ export default function EventDetails() {
                 </>
               )}
               
-              <Button variant="outline" className="w-full mt-3">
-                <Share2 className="mr-2 h-4 w-4" /> Share Event
-              </Button>
+              <div className="flex gap-2 mt-3">
+                <CalendarExport event={event} />
+                <SocialShare event={event} />
+              </div>
 
-              {/* QR Check-in for organizers */}
+              {/* QR Check-in & Email for organizers */}
               {user?.role === "organizer" && (
-                <div className="mt-3">
+                <div className="mt-3 space-y-2">
                   <QRCheckIn event={event} />
+                  <EmailNotifications event={event} />
                 </div>
               )}
             </div>

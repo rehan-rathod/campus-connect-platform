@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import QRCode from "qrcode.react";
+import { QRCodeSVG as QRCode } from "qrcode.react";
 import { Event } from "@/lib/mockData";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";

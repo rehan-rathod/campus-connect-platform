@@ -60,6 +60,11 @@ export function EventForm({ onSuccess }: { onSuccess?: () => void }) {
       organizerId: "u2", // Hardcoded for demo
       image: "https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=1000&q=80",
       category: values.category as any,
+      tags: [],
+      reviews: [],
+      attendeeList: [],
+      waitlist: [],
+      avgRating: 0,
     });
 
     toast({

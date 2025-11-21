@@ -1,5 +1,6 @@
 import { getEvents } from "@/lib/mockData";
 import { EventCard } from "@/components/domain/EventCard";
+import { ActivityFeed } from "@/components/domain/ActivityFeed";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "wouter";
@@ -59,18 +60,23 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Categories/Quick Links */}
+      {/* Live Activity + Categories */}
       <section className="bg-muted/30 py-16">
-        <div className="container text-center space-y-8">
-          <h2 className="text-3xl font-heading font-bold">Browse by Category</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {['Academic', 'Social', 'Sports', 'Music'].map((cat) => (
-              <Link key={cat} href={`/events?category=${cat}`}>
-                <div className="bg-background p-6 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer border hover:border-primary/50 group">
-                  <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{cat}</h3>
-                </div>
-              </Link>
-            ))}
+        <div className="container">
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
+            <div className="md:col-span-2">
+              <h2 className="text-3xl font-heading font-bold mb-6">Browse by Category</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {['Academic', 'Social', 'Sports', 'Music'].map((cat) => (
+                  <Link key={cat} href={`/events?category=${cat}`}>
+                    <div className="bg-background p-6 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer border hover:border-primary/50 group">
+                      <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{cat}</h3>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <ActivityFeed />
           </div>
         </div>
       </section>

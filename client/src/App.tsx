@@ -9,6 +9,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Events from "@/pages/Events";
 import Dashboard from "@/pages/Dashboard";
+import Analytics from "@/pages/Analytics";
 import EventDetails from "@/pages/EventDetails";
 
 function Router() {
@@ -18,6 +19,7 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/events" component={Events} />
         <Route path="/dashboard" component={Dashboard} />
+        <Route path="/analytics" component={Analytics} />
         <Route path="/event/:id" component={EventDetails} />
         <Route component={NotFound} />
       </Switch>
