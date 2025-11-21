@@ -13,6 +13,7 @@ import { RecommendedEvents } from "@/components/domain/RecommendedEvents";
 import { CalendarExport } from "@/components/domain/CalendarExport";
 import { SocialShare } from "@/components/domain/SocialShare";
 import { EmailNotifications } from "@/components/domain/EmailNotifications";
+import { MapView } from "@/components/domain/MapView";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function EventDetails() {
@@ -92,6 +93,9 @@ export default function EventDetails() {
                 ))}
               </div>
             )}
+
+            {/* Map View */}
+            <MapView location={event.location} coordinates={event.locationCoordinates} />
 
             {/* Reviews Section */}
             <div className="border-t pt-8">

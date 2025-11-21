@@ -26,6 +26,10 @@ export interface Event {
   description: string;
   date: Date;
   location: string;
+  locationCoordinates?: {
+    lat: number;
+    lng: number;
+  };
   organizerId: string;
   status: EventStatus;
   image: string;
@@ -54,6 +58,8 @@ import lectureImage from "@assets/generated_images/lecture_hall_event.png";
 import concertImage from "@assets/generated_images/music_concert_event.png";
 import workshopImage from "@assets/generated_images/coding_workshop_event.png";
 
+const ITM_COORDINATES = { lat: 22.4501584, lng: 73.3522416 };
+
 export const MOCK_EVENTS: Event[] = [
   {
     id: "e1",
@@ -61,6 +67,7 @@ export const MOCK_EVENTS: Event[] = [
     description: "Join us for 24 hours of coding, pizza, and prizes! Open to all majors.",
     date: addDays(new Date(), 2),
     location: "Innovation Hub, Room 204",
+    locationCoordinates: ITM_COORDINATES,
     organizerId: "u2",
     status: "approved",
     image: workshopImage,
@@ -85,6 +92,7 @@ export const MOCK_EVENTS: Event[] = [
     description: "Live performances by student bands and special guests.",
     date: addDays(new Date(), 5),
     location: "The Green",
+    locationCoordinates: ITM_COORDINATES,
     organizerId: "u2",
     status: "approved",
     image: concertImage,
@@ -103,6 +111,7 @@ export const MOCK_EVENTS: Event[] = [
     description: "Dr. Sarah Johnson discusses the ethical implications of generative AI.",
     date: addDays(new Date(), 1),
     location: "Main Auditorium",
+    locationCoordinates: ITM_COORDINATES,
     organizerId: "u1",
     status: "approved",
     image: lectureImage,
@@ -121,6 +130,7 @@ export const MOCK_EVENTS: Event[] = [
     description: "Cheer on your favorite teams in the championship match.",
     date: subDays(new Date(), 2),
     location: "Sports Complex",
+    locationCoordinates: ITM_COORDINATES,
     organizerId: "u2",
     status: "approved",
     image: heroImage,
@@ -139,6 +149,7 @@ export const MOCK_EVENTS: Event[] = [
     description: "Free pancakes for students studying for finals.",
     date: addDays(new Date(), 10),
     location: "Student Center",
+    locationCoordinates: ITM_COORDINATES,
     organizerId: "u2",
     status: "pending",
     image: heroImage,

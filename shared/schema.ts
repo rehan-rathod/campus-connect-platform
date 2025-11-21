@@ -24,6 +24,7 @@ export const events = pgTable("events", {
   description: text("description").notNull(),
   date: timestamp("date").notNull(),
   location: text("location").notNull(),
+  locationCoordinates: jsonb("location_coordinates"),
   organizerId: varchar("organizer_id").notNull().references(() => users.id),
   status: text("status").notNull().default("pending"), // approved, pending, rejected, cancelled
   image: text("image"),
