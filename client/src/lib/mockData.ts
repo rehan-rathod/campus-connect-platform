@@ -3,6 +3,23 @@ import { addDays, format, subDays } from "date-fns";
 // Types
 export type EventStatus = "approved" | "pending" | "rejected" | "cancelled";
 
+export interface Review {
+  id: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  date: Date;
+}
+
+export interface Attendee {
+  id: string;
+  name: string;
+  email: string;
+  status: "registered" | "checked-in" | "waitlist";
+  checkedInAt?: Date;
+}
+
 export interface Event {
   id: string;
   title: string;
@@ -15,6 +32,11 @@ export interface Event {
   capacity: number;
   attendees: number;
   category: "Academic" | "Social" | "Sports" | "Workshop" | "Music";
+  reviews: Review[];
+  attendeeList: Attendee[];
+  waitlist: Attendee[];
+  tags: string[];
+  avgRating: number;
 }
 
 export interface Notification {
@@ -45,6 +67,17 @@ export const MOCK_EVENTS: Event[] = [
     capacity: 100,
     attendees: 45,
     category: "Workshop",
+    tags: ["coding", "prizes", "24hours"],
+    avgRating: 4.8,
+    reviews: [
+      { id: "r1", userId: "u4", userName: "Dave Student", rating: 5, comment: "Amazing event! Best hackathon ever.", date: subDays(new Date(), 1) },
+      { id: "r2", userId: "u5", userName: "Emma Engineer", rating: 4, comment: "Great prizes and networking.", date: subDays(new Date(), 1) },
+    ],
+    attendeeList: [
+      { id: "a1", name: "Dave Student", email: "dave@university.edu", status: "registered" },
+      { id: "a2", name: "Emma Engineer", email: "emma@university.edu", status: "checked-in", checkedInAt: new Date() },
+    ],
+    waitlist: [],
   },
   {
     id: "e2",
@@ -58,6 +91,11 @@ export const MOCK_EVENTS: Event[] = [
     capacity: 500,
     attendees: 320,
     category: "Music",
+    tags: ["live", "music", "outdoors"],
+    avgRating: 4.5,
+    reviews: [],
+    attendeeList: [],
+    waitlist: [],
   },
   {
     id: "e3",
@@ -65,25 +103,35 @@ export const MOCK_EVENTS: Event[] = [
     description: "Dr. Sarah Johnson discusses the ethical implications of generative AI.",
     date: addDays(new Date(), 1),
     location: "Main Auditorium",
-    organizerId: "u1", // Admin created
+    organizerId: "u1",
     status: "approved",
     image: lectureImage,
     capacity: 200,
     attendees: 180,
     category: "Academic",
+    tags: ["AI", "ethics", "lecture"],
+    avgRating: 4.7,
+    reviews: [],
+    attendeeList: [],
+    waitlist: [],
   },
   {
     id: "e4",
     title: "Intramural Soccer Finals",
     description: "Cheer on your favorite teams in the championship match.",
-    date: subDays(new Date(), 2), // Past event
+    date: subDays(new Date(), 2),
     location: "Sports Complex",
     organizerId: "u2",
     status: "approved",
-    image: heroImage, // Fallback
+    image: heroImage,
     capacity: 1000,
     attendees: 850,
     category: "Sports",
+    tags: ["sports", "soccer", "championship"],
+    avgRating: 4.6,
+    reviews: [],
+    attendeeList: [],
+    waitlist: [],
   },
   {
     id: "e5",
@@ -97,6 +145,11 @@ export const MOCK_EVENTS: Event[] = [
     capacity: 300,
     attendees: 0,
     category: "Social",
+    tags: ["free", "food", "finals"],
+    avgRating: 0,
+    reviews: [],
+    attendeeList: [],
+    waitlist: [],
   },
 ];
 
