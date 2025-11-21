@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, Calendar, PlusCircle, BarChart3, User } from "lucide-react";
+import { Home, Calendar, PlusCircle, BarChart3, Map } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { motion } from "framer-motion";
 
@@ -11,8 +11,8 @@ export function MobileNav() {
     { href: "/", label: "Home", icon: Home },
     { href: "/events", label: "Events", icon: Calendar },
     { href: "/dashboard", label: "Create", icon: PlusCircle, highlight: true },
+    { href: "/campus-map", label: "Map", icon: Map },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
-    { href: "/dashboard", label: "Profile", icon: User },
   ];
 
   return (
@@ -23,7 +23,7 @@ export function MobileNav() {
           const Icon = item.icon;
 
           return (
-            <Link key={item.href} href={item.href}>
+            <Link key={item.label} href={item.href}>
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 className={`flex flex-col items-center justify-center relative px-4 py-2 rounded-xl transition-all ${

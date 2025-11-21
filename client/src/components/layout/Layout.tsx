@@ -10,46 +10,74 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Calendar, Menu, User } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Bell, Calendar, Menu, User, LogOut, Map } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { MOCK_NOTIFICATIONS } from "@/lib/mockData";
 import { Badge } from "@/components/ui/badge";
 import { MobileNav } from "@/components/domain/MobileNav";
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { user, login, logout } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
   const unreadNotifications = MOCK_NOTIFICATIONS.filter((n) => !n.read).length;
+
+  // Check if we are on the login or register page
+  const isAuthPage = location === "/login" || location === "/register";
+
+  if (isAuthPage) {
+    return (
+      <main className="min-h-screen bg-background">
+        {children}
+      </main>
+    );
+  }
 
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/events", label: "Events" },
+    { href: "/campus-map", label: "Campus Map" },
     { href: "/analytics", label: "Analytics" },
     ...(user ? [{ href: "/dashboard", label: "Dashboard" }] : []),
   ];
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2 font-heading font-bold text-xl text-primary">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+        {/* Decorative Glow Effect */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-[100px] left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-blue-500/20 blur-[80px] rounded-full opacity-50" />
+          <div className="absolute -top-[100px] left-1/4 -translate-x-1/2 w-[400px] h-[200px] bg-purple-500/20 blur-[80px] rounded-full opacity-50" />
+          <div className="absolute -top-[100px] right-1/4 translate-x-1/2 w-[400px] h-[200px] bg-pink-500/20 blur-[80px] rounded-full opacity-50" />
+        </div>
+        <div className="container relative flex h-16 items-center justify-between">
+          <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-2 font-heading font-bold text-xl text-primary hover:opacity-90 transition-opacity">
               <Calendar className="h-6 w-6" />
-              <span>CampusConnect</span>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
+                CampusConnect
+              </span>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`transition-colors hover:text-primary ${
-                    location === item.href ? "text-foreground" : "text-muted-foreground"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
+            <nav className="hidden md:flex items-center gap-1">
+              {navItems.map((item) => {
+                const isActive = location === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`relative px-4 py-2 text-sm font-medium transition-colors rounded-md hover:bg-accent/50 ${
+                      isActive 
+                        ? "text-foreground font-semibold" 
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {item.label}
+                    {isActive && (
+                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-full" />
+                    )}
+                  </Link>
+                );
+              })}
             </nav>
           </div>
 
@@ -62,6 +90,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left">
+                <SheetHeader>
+                  <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
+                  <SheetDescription className="sr-only">Navigation links</SheetDescription>
+                </SheetHeader>
                 <nav className="flex flex-col gap-4 mt-8">
                   {navItems.map((item) => (
                     <Link key={item.href} href={item.href} className="text-lg font-medium">
@@ -111,7 +143,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatar} alt={user.name} />
+                      <AvatarImage src={user.avatar || undefined} alt={user.name} />
                       <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                   </Button>
@@ -127,21 +159,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Switch Role (Demo)</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => login("admin")}>Admin</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => login("organizer")}>Organizer</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => login("approver")}>Approver</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => login("attendee")}>Attendee</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="text-destructive">
+                  <DropdownMenuItem onClick={() => logoutMutation.mutate()} className="text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
                     Log out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button onClick={() => login("attendee")} size="sm">
-                Log In
-              </Button>
+              <div className="flex gap-2">
+                <Link href="/login">
+                  <Button size="sm" variant="ghost">
+                    Log In
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button size="sm">
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>

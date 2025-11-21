@@ -1,12 +1,116 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertEventSchema, insertReviewSchema, insertAttendeeSchema, insertNotificationSchema } from "@shared/schema";
+import { insertEventSchema, insertReviewSchema, insertAttendeeSchema, insertNotificationSchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import cookieParser from "cookie-parser";
+
+const JWT_SECRET = process.env.JWT_SECRET || "super_secret_jwt_key_123";
+
+// Middleware to check authentication
+const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+  const token = req.cookies.token;
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
+
+  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+    if (err) return res.status(403).json({ error: "Forbidden" });
+    (req as any).user = user;
+    next();
+  });
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  app.use(cookieParser());
+
+  // ===== AUTH API =====
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const schema = insertUserSchema.extend({
+        password: z.string().min(6, "Password must be at least 6 characters"),
+      });
+      
+      const validated = schema.parse(req.body);
+      
+      const existingUser = await storage.getUserByEmail(validated.email);
+      if (existingUser) {
+        return res.status(409).json({ error: "Email already exists" });
+      }
+
+      const hashedPassword = await bcrypt.hash(validated.password, 10);
+      const user = await storage.createUser({
+        ...validated,
+        password: hashedPassword,
+      });
+
+      // Don't return password
+      const { password, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ errors: error.errors });
+      }
+      res.status(500).json({ error: "Registration failed" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password required" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      const token = jwt.sign(
+        { id: user.id, email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: "24h" }
+      );
+
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      });
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword });
+    } catch (error) {
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    res.clearCookie("token");
+    res.json({ message: "Logged out successfully" });
+  });
+
+  app.get("/api/auth/me", authenticateToken, async (req, res) => {
+    try {
+      const userId = (req as any).user.id;
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch user" });
+    }
+  });
+
   // ===== USERS API =====
-  app.get("/api/users", async (req, res) => {
+  app.get("/api/users", authenticateToken, async (req, res) => {
     try {
       const allUsers = await storage.getAllUsers();
       res.json(allUsers);
@@ -15,32 +119,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/:id", async (req, res) => {
+  app.get("/api/users/:id", authenticateToken, async (req, res) => {
     try {
       const user = await storage.getUser(req.params.id);
       if (!user) return res.status(404).json({ error: "User not found" });
       res.json(user);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch user" });
-    }
-  });
-
-  app.post("/api/users", async (req, res) => {
-    try {
-      const schema = z.object({
-        name: z.string(),
-        email: z.string().email(),
-        role: z.string().optional(),
-        avatar: z.string().optional(),
-      });
-      const validated = schema.parse(req.body);
-      const user = await storage.createUser(validated as any);
-      res.status(201).json(user);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ errors: error.errors });
-      }
-      res.status(500).json({ error: "Failed to create user" });
     }
   });
 
@@ -79,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events", async (req, res) => {
+  app.post("/api/events", authenticateToken, async (req, res) => {
     try {
       const validated = insertEventSchema.parse(req.body);
       const event = await storage.createEvent(validated);
@@ -92,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/events/:id/status", async (req, res) => {
+  app.patch("/api/events/:id/status", authenticateToken, async (req, res) => {
     try {
       const { status } = req.body;
       if (!["approved", "rejected", "cancelled"].includes(status)) {
@@ -106,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/events/:id/attendees", async (req, res) => {
+  app.get("/api/events/:id/attendees", authenticateToken, async (req, res) => {
     try {
       const attendeeList = await storage.getEventAttendees(req.params.id);
       res.json(attendeeList);
@@ -125,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events/:id/reviews", async (req, res) => {
+  app.post("/api/events/:id/reviews", authenticateToken, async (req, res) => {
     try {
       const validated = insertReviewSchema.parse({
         ...req.body,
@@ -142,11 +227,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ===== ATTENDEES API =====
-  app.post("/api/events/:id/register", async (req, res) => {
+  app.post("/api/events/:id/register", authenticateToken, async (req, res) => {
     try {
-      const { userId } = req.body;
-      if (!userId) return res.status(400).json({ error: "userId is required" });
-
+      const userId = (req as any).user.id;
+      
       // Check if already registered
       const existing = await storage.getUserEventRegistration(req.params.id, userId);
       if (existing) {
@@ -180,7 +264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/attendees/:id/checkin", async (req, res) => {
+  app.post("/api/attendees/:id/checkin", authenticateToken, async (req, res) => {
     try {
       const attendee = await storage.checkInAttendee(req.params.id);
       if (!attendee) return res.status(404).json({ error: "Attendee not found" });
@@ -200,7 +284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ===== NOTIFICATIONS API =====
-  app.get("/api/notifications/:userId", async (req, res) => {
+  app.get("/api/notifications/:userId", authenticateToken, async (req, res) => {
     try {
       const notificationList = await storage.getUserNotifications(req.params.userId);
       res.json(notificationList);
@@ -209,7 +293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/notifications/send-bulk", async (req, res) => {
+  app.post("/api/notifications/send-bulk", authenticateToken, async (req, res) => {
     try {
       const { eventId, subject, message } = req.body;
       if (!eventId || !message) {
@@ -246,7 +330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ===== ANALYTICS API =====
-  app.get("/api/analytics/events", async (req, res) => {
+  app.get("/api/analytics/events", authenticateToken, async (req, res) => {
     try {
       const allEvents = await storage.getAllEvents();
       res.json({

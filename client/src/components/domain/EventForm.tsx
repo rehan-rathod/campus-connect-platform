@@ -25,7 +25,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { createEvent } from "@/lib/mockData";
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, MapPin } from "lucide-react";
+import { LocationPicker } from "@/components/domain/LocationPicker";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
@@ -34,6 +36,10 @@ const formSchema = z.object({
   location: z.string().min(2, "Location is required"),
   category: z.enum(["Academic", "Social", "Sports", "Workshop", "Music"]),
   capacity: z.string().transform((val) => parseInt(val, 10)).refine((val) => val > 0, "Capacity must be positive"),
+  locationCoordinates: z.object({
+    lat: z.number(),
+    lng: z.number()
+  }).optional(),
 });
 
 export function EventForm({ onSuccess }: { onSuccess?: () => void }) {
@@ -53,7 +59,6 @@ export function EventForm({ onSuccess }: { onSuccess?: () => void }) {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, we'd upload the image here. Using a placeholder for now.
     const newEvent = createEvent({
       ...values,
       date: new Date(values.date),
@@ -65,6 +70,7 @@ export function EventForm({ onSuccess }: { onSuccess?: () => void }) {
       attendeeList: [],
       waitlist: [],
       avgRating: 0,
+      locationCoordinates: values.locationCoordinates,
     });
 
     toast({
@@ -84,7 +90,7 @@ export function EventForm({ onSuccess }: { onSuccess?: () => void }) {
           <Plus className="mr-2 h-4 w-4" /> Create Event
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Event</DialogTitle>
           <DialogDescription>
@@ -108,46 +114,32 @@ export function EventForm({ onSuccess }: { onSuccess?: () => void }) {
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Academic">Academic</SelectItem>
-                      <SelectItem value="Social">Social</SelectItem>
-                      <SelectItem value="Sports">Sports</SelectItem>
-                      <SelectItem value="Workshop">Workshop</SelectItem>
-                      <SelectItem value="Music">Music</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="date"
+                name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Date & Time</FormLabel>
-                    <FormControl>
-                      <Input type="datetime-local" {...field} />
-                    </FormControl>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Academic">Academic</SelectItem>
+                        <SelectItem value="Social">Social</SelectItem>
+                        <SelectItem value="Sports">Sports</SelectItem>
+                        <SelectItem value="Workshop">Workshop</SelectItem>
+                        <SelectItem value="Music">Music</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="capacity"
@@ -165,35 +157,74 @@ export function EventForm({ onSuccess }: { onSuccess?: () => void }) {
 
             <FormField
               control={form.control}
-              name="location"
+              name="date"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Location</FormLabel>
+                  <FormLabel>Date & Time</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Room 302" {...field} />
+                    <Input type="datetime-local" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
+            <Tabs defaultValue="details" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="location">Location Map</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="details" className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Room 302" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Describe your event..." 
+                          className="resize-none" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+
+              <TabsContent value="location" className="space-y-4">
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Pin Location on Map</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Describe your event..." 
-                      className="resize-none" 
-                      {...field} 
+                    <LocationPicker 
+                      onLocationChange={(coords) => {
+                        form.setValue("locationCoordinates", coords);
+                      }} 
                     />
                   </FormControl>
-                  <FormMessage />
+                  <p className="text-xs text-muted-foreground">
+                    Drag the marker to set the precise location of the event.
+                  </p>
                 </FormItem>
-              )}
-            />
+              </TabsContent>
+            </Tabs>
 
             <DialogFooter>
               <Button type="submit">Submit for Approval</Button>

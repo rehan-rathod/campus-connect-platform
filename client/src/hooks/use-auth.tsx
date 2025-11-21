@@ -1,79 +1,72 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
-
-export type Role = "admin" | "organizer" | "approver" | "attendee";
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: Role;
-  avatar: string;
-}
-
-export const MOCK_USERS: User[] = [
-  {
-    id: "u1",
-    name: "Alice Admin",
-    email: "alice@university.edu",
-    role: "admin",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80",
-  },
-  {
-    id: "u2",
-    name: "Bob Organizer",
-    email: "bob@university.edu",
-    role: "organizer",
-    avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=150&q=80",
-  },
-  {
-    id: "u3",
-    name: "Carol Approver",
-    email: "carol@university.edu",
-    role: "approver",
-    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&q=80",
-  },
-  {
-    id: "u4",
-    name: "Dave Student",
-    email: "dave@university.edu",
-    role: "attendee",
-    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80",
-  },
-];
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { User } from "@shared/schema";
+import { useLocation } from "wouter";
 
 interface AuthContextType {
   user: User | null;
-  login: (role: Role) => void;
-  logout: () => void;
+  isLoading: boolean;
+  loginMutation: any;
+  registerMutation: any;
+  logoutMutation: any;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(MOCK_USERS[0]); // Default to Admin for demo
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
-  const login = (role: Role) => {
-    const foundUser = MOCK_USERS.find((u) => u.role === role);
-    if (foundUser) {
-      setUser(foundUser);
-      toast({
-        title: `Switched to ${foundUser.name}`,
-        description: `You are now viewing as a ${role}.`,
-      });
-    }
-  };
+  const { data: user, isLoading } = useQuery<User | null>({
+    queryKey: ["/api/auth/me"],
+    retry: false,
+  });
 
-  const logout = () => {
-    setUser(null);
-    toast({
-      title: "Logged out",
-    });
-  };
+  const loginMutation = useMutation({
+    mutationFn: async (credentials: any) => {
+      const res = await apiRequest("POST", "/api/auth/login", credentials);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/auth/me"], data.user);
+      toast({ title: "Login Successful", description: `Welcome back, ${data.user.name}!` });
+      setLocation("/");
+    },
+    onError: (error: Error) => {
+      toast({ title: "Login Failed", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: async (userData: any) => {
+      const res = await apiRequest("POST", "/api/auth/register", userData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Registration Successful", description: "Please log in with your new account." });
+      setLocation("/login");
+    },
+    onError: (error: Error) => {
+      toast({ title: "Registration Failed", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/auth/logout");
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(["/api/auth/me"], null);
+      toast({ title: "Logged out successfully" });
+      setLocation("/login");
+    },
+  });
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user: user ?? null, isLoading, loginMutation, registerMutation, logoutMutation }}>
       {children}
     </AuthContext.Provider>
   );
