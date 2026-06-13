@@ -1,6 +1,11 @@
 {
   "version": 2,
   "outputDirectory": "dist/public",
+  "functions": {
+    "api/index.ts": {
+      "bundle": true
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
