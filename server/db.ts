@@ -1,12 +1,12 @@
-import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
 
 if (!process.env.DATABASE_URL) {
-  console.warn("DATABASE_URL not set. Defaulting to dummy connection string for build purposes. The app will use in-memory storage.");
+  console.warn("DATABASE_URL not set. App will use in-memory storage.");
 }
 
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL || "postgres://dummy:dummy@localhost:5432/dummy",
-});
+const pool = process.env.DATABASE_URL
+  ? new pg.Pool({ connectionString: process.env.DATABASE_URL })
+  : null;
 
-export const db = drizzle(pool);
+export const db = pool ? drizzle(pool) : (null as any);
