@@ -2,6 +2,7 @@ import { db } from "./db";
 import { users, events, reviews, attendees, notifications, activities } from "@shared/schema";
 import { type InsertUser, type User, type InsertEvent, type Event, type InsertReview, type Review, type InsertAttendee, type Attendee, type InsertNotification, type Notification, type InsertActivity, type Activity } from "@shared/schema";
 import { eq, desc, gte, lte, and, ne } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 export interface IStorage {
   // Users
@@ -46,6 +47,162 @@ export class MemStorage implements IStorage {
   private notifications: Map<string, Notification> = new Map();
   private activities: Map<string, Activity> = new Map();
   private idCounter = 1;
+
+  constructor() {
+    this.seed();
+  }
+
+  private seed() {
+    const hashedPassword = bcrypt.hashSync("password123", 10);
+    
+    // Seed Users
+    const u1: User = { id: "u1", name: "Dr. Sarah Johnson", email: "sarah@university.edu", password: hashedPassword, role: "approver", avatar: null, createdAt: new Date() };
+    const u2: User = { id: "u2", name: "Prof. Jane Doe", email: "jane@university.edu", password: hashedPassword, role: "organizer", avatar: null, createdAt: new Date() };
+    const u3: User = { id: "u3", name: "Admin User", email: "admin@university.edu", password: hashedPassword, role: "admin", avatar: null, createdAt: new Date() };
+    const u4: User = { id: "u4", name: "Dave Student", email: "dave@university.edu", password: hashedPassword, role: "attendee", avatar: null, createdAt: new Date() };
+    const u5: User = { id: "u5", name: "Emma Engineer", email: "emma@university.edu", password: hashedPassword, role: "attendee", avatar: null, createdAt: new Date() };
+    
+    this.users.set(u1.id, u1);
+    this.users.set(u2.id, u2);
+    this.users.set(u3.id, u3);
+    this.users.set(u4.id, u4);
+    this.users.set(u5.id, u5);
+
+    this.idCounter = 6;
+
+    // Seed Events
+    const ITM_COORDINATES = { lat: 22.4501584, lng: 73.3522416 };
+    const addDays = (d: Date, days: number) => {
+      const result = new Date(d);
+      result.setDate(result.getDate() + days);
+      return result;
+    };
+    const subDays = (d: Date, days: number) => {
+      const result = new Date(d);
+      result.setDate(result.getDate() - days);
+      return result;
+    };
+
+    const e1: Event = {
+      id: "e1",
+      title: "Computer Science Annual Hackathon",
+      description: "Join us for 24 hours of coding, pizza, and prizes! Open to all majors.",
+      date: addDays(new Date(), 2),
+      location: "Innovation Hub, Room 204",
+      locationCoordinates: ITM_COORDINATES,
+      organizerId: "u2",
+      status: "approved",
+      image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d",
+      capacity: 100,
+      attendees: 2,
+      category: "Workshop",
+      tags: ["coding", "prizes", "24hours"],
+      avgRating: 4.8,
+      createdAt: new Date(),
+    };
+
+    const e2: Event = {
+      id: "e2",
+      title: "Spring Campus Concert",
+      description: "Live performances by student bands and special guests.",
+      date: addDays(new Date(), 5),
+      location: "The Green",
+      locationCoordinates: ITM_COORDINATES,
+      organizerId: "u2",
+      status: "approved",
+      image: "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4",
+      capacity: 500,
+      attendees: 0,
+      category: "Music",
+      tags: ["live", "music", "outdoors"],
+      avgRating: 0,
+      createdAt: new Date(),
+    };
+
+    const e3: Event = {
+      id: "e3",
+      title: "Guest Lecture: AI Ethics",
+      description: "Dr. Sarah Johnson discusses the ethical implications of generative AI.",
+      date: addDays(new Date(), 1),
+      location: "Main Auditorium",
+      locationCoordinates: ITM_COORDINATES,
+      organizerId: "u1",
+      status: "approved",
+      image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4",
+      capacity: 200,
+      attendees: 0,
+      category: "Academic",
+      tags: ["AI", "ethics", "lecture"],
+      avgRating: 4.7,
+      createdAt: new Date(),
+    };
+
+    const e4: Event = {
+      id: "e4",
+      title: "Intramural Soccer Finals",
+      description: "Cheer on your favorite teams in the championship match.",
+      date: subDays(new Date(), 2),
+      location: "Sports Complex",
+      locationCoordinates: ITM_COORDINATES,
+      organizerId: "u2",
+      status: "approved",
+      image: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2",
+      capacity: 1000,
+      attendees: 0,
+      category: "Sports",
+      tags: ["sports", "soccer", "championship"],
+      avgRating: 4.6,
+      createdAt: new Date(),
+    };
+
+    const e5: Event = {
+      id: "e5",
+      title: "Midnight Breakfast",
+      description: "Free pancakes for students studying for finals.",
+      date: addDays(new Date(), 10),
+      location: "Student Center",
+      locationCoordinates: ITM_COORDINATES,
+      organizerId: "u2",
+      status: "pending",
+      image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352",
+      capacity: 300,
+      attendees: 0,
+      category: "Social",
+      tags: ["free", "food", "finals"],
+      avgRating: 0,
+      createdAt: new Date(),
+    };
+
+    this.events.set(e1.id, e1);
+    this.events.set(e2.id, e2);
+    this.events.set(e3.id, e3);
+    this.events.set(e4.id, e4);
+    this.events.set(e5.id, e5);
+
+    // Seed Reviews
+    const r1: Review = { id: "r1", eventId: "e1", userId: "u4", rating: 5, comment: "Amazing event! Best hackathon ever.", createdAt: subDays(new Date(), 1) };
+    const r2: Review = { id: "r2", eventId: "e1", userId: "u5", rating: 4, comment: "Great prizes and networking.", createdAt: subDays(new Date(), 1) };
+    this.reviews.set(r1.id, r1);
+    this.reviews.set(r2.id, r2);
+
+    // Seed Attendees
+    const a1: Attendee = { id: "a1", eventId: "e1", userId: "u4", status: "registered", checkedInAt: null, createdAt: new Date() };
+    const a2: Attendee = { id: "a2", eventId: "e1", userId: "u5", status: "checked-in", checkedInAt: new Date(), createdAt: new Date() };
+    this.attendees.set(a1.id, a1);
+    this.attendees.set(a2.id, a2);
+
+    // Seed Activities
+    const act1: Activity = { id: "act1", userId: "u4", eventId: "e1", type: "registered", detail: "registered for Computer Science Annual Hackathon", createdAt: new Date() };
+    const act2: Activity = { id: "act2", userId: "u5", eventId: "e1", type: "checked-in", detail: "checked in for Computer Science Annual Hackathon", createdAt: new Date() };
+    this.activities.set(act1.id, act1);
+    this.activities.set(act2.id, act2);
+
+    // Seed Notifications
+    const n1: Notification = { id: "n1", userId: "u4", message: "Reminder: Hackathon starts in 2 days!", read: false, type: "info", createdAt: new Date() };
+    const n2: Notification = { id: "n2", userId: "u2", message: "Your event 'Midnight Breakfast' is awaiting approval.", read: true, type: "warning", createdAt: subDays(new Date(), 1) };
+    this.notifications.set(n1.id, n1);
+    this.notifications.set(n2.id, n2);
+  }
 
   private getId(): string {
     return (this.idCounter++).toString();

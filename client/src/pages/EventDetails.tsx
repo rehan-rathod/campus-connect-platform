@@ -1,10 +1,10 @@
 import { useParams, Link } from "wouter";
-import { getEventById } from "@/lib/mockData";
+import { useGetEvent, useRegisterEvent } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Users, ArrowLeft, CheckCircle } from "lucide-react";
+import { Calendar, MapPin, Users, ArrowLeft, CheckCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { QRCheckIn } from "@/components/domain/QRCheckIn";
 import { ReviewsSection } from "@/components/domain/ReviewsSection";
 import { WaitlistComponent } from "@/components/domain/WaitlistComponent";
@@ -18,25 +18,71 @@ import { useAuth } from "@/hooks/use-auth";
 
 export default function EventDetails() {
   const { id } = useParams();
-  const event = getEventById(id || "");
+  const queryClient = useQueryClient();
+  const { data: event, isLoading } = useGetEvent(id || "");
+  const registerMutation = useRegisterEvent();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [isRegistered, setIsRegistered] = useState(false);
 
-  if (!event) {
-    return <div className="container py-20 text-center">Event not found</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
+  if (!event) {
+    return <div className="container py-20 text-center text-muted-foreground">Event not found</div>;
+  }
+
+  const isRegistered = user && event.attendeeList?.some((a: any) => a.userId === user.id);
+  const isWaitlisted = user && event.waitlist?.some((a: any) => a.userId === user.id);
+
   const handleRSVP = () => {
-    setIsRegistered(!isRegistered);
-    toast({
-      title: isRegistered ? "Registration Cancelled" : "RSVP Confirmed",
-      description: isRegistered 
-        ? "You have been removed from the attendee list." 
-        : "You have successfully registered for this event!",
-      variant: isRegistered ? "destructive" : "default",
-    });
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to RSVP for events.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isRegistered || isWaitlisted) {
+      toast({
+        title: "Already Registered",
+        description: "You have already RSVP'd for this event.",
+      });
+      return;
+    }
+
+    registerMutation.mutate(
+      { eventId: event.id, userId: user.id },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["event", event.id] });
+          toast({
+            title: "RSVP Confirmed",
+            description: "You have successfully registered for this event!",
+          });
+        },
+        onError: (err: any) => {
+          toast({
+            title: "Registration Failed",
+            description: err.message || "Something went wrong.",
+            variant: "destructive",
+          });
+        },
+      }
+    );
   };
+
+  const eventDate = typeof event.date === "string" || typeof event.date === "number"
+    ? new Date(event.date)
+    : event.date;
+
+  const eventImage = event.image || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d";
 
   return (
     <div className="bg-background min-h-screen">
@@ -44,7 +90,7 @@ export default function EventDetails() {
       <div className="relative h-[400px] w-full overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent z-10" />
         <img 
-          src={event.image} 
+          src={eventImage} 
           alt={event.title} 
           className="w-full h-full object-cover"
         />
@@ -61,7 +107,7 @@ export default function EventDetails() {
           <div className="flex flex-wrap gap-4 text-white/90">
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              {event.date.toLocaleString()}
+              {eventDate ? eventDate.toLocaleString() : "No Date"}
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-5 w-5" />
@@ -86,9 +132,9 @@ export default function EventDetails() {
             </div>
 
             {/* Tags */}
-            {event.tags.length > 0 && (
+            {Array.isArray(event.tags) && event.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {event.tags.map((tag) => (
+                {(event.tags as any[]).map((tag: any) => (
                   <Badge key={tag} variant="secondary">{tag}</Badge>
                 ))}
               </div>

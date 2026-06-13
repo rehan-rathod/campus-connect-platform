@@ -95,3 +95,53 @@ export const useGetAnalytics = () => {
     },
   });
 };
+
+export const useCreateReview = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ eventId, rating, comment }: { eventId: string; rating: number; comment: string }) => {
+      const res = await fetch(`${API_BASE}/events/${eventId}/reviews`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating, comment }),
+      });
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+      return res.json();
+    },
+    onSuccess: (_, { eventId }) => {
+      queryClient.invalidateQueries({ queryKey: ["event", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+    },
+  });
+};
+
+export const useGetUserEvents = (userId: string) => {
+  return useQuery({
+    queryKey: ["userEvents", userId],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/users/${userId}/events`);
+      if (!res.ok) {
+        throw new Error("Failed to fetch user events");
+      }
+      return res.json();
+    },
+    enabled: !!userId,
+  });
+};
+
+export const useGetNotifications = (userId: string) => {
+  return useQuery({
+    queryKey: ["notifications", userId],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/notifications/${userId}`);
+      if (!res.ok) {
+        throw new Error("Failed to fetch notifications");
+      }
+      return res.json();
+    },
+    enabled: !!userId,
+  });
+};
+

@@ -1,36 +1,50 @@
-import { getEvents } from "@/lib/mockData";
+import { useGetEvents } from "@/lib/api";
+import { type Event } from "@shared/schema";
 import { EventCard } from "@/components/domain/EventCard";
 import { ActivityFeed } from "@/components/domain/ActivityFeed";
 import { SearchBar } from "@/components/domain/SearchBar";
 import { CategoryCard } from "@/components/domain/CategoryCard";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, TrendingUp, Star, Users } from "lucide-react";
+import { ArrowRight, TrendingUp, Star, Users, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import heroImage from "@assets/generated_images/modern_university_campus_hero_image.png";
 
 export default function Home() {
-  const featuredEvents = getEvents({ status: "approved" }).slice(0, 3);
-  const allEvents = getEvents({ status: "approved" });
+  const { data: allEvents, isLoading } = useGetEvents("approved");
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground animate-pulse">Loading amazing campus experiences...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const eventsList = allEvents || [];
+  const featuredEvents = eventsList.slice(0, 3);
 
   // Count events by category
-  const categoryCounts = allEvents.reduce((acc, event) => {
+  const categoryCounts = eventsList.reduce((acc: Record<string, number>, event: Event) => {
     acc[event.category] = (acc[event.category] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen overflow-x-hidden">
       {/* Hero Section */}
-      <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[650px] flex items-center justify-center overflow-hidden">
         {/* Background Image with Gradient Overlay */}
         <div className="absolute inset-0 z-0">
           <img 
             src={heroImage} 
             alt="Campus" 
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover scale-105 filter brightness-95"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-blue-900/60 via-purple-900/50 to-background/90" />
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-950/70 via-purple-950/60 to-background" />
         </div>
         
         {/* Hero Content */}
@@ -38,56 +52,63 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8 }}
           >
-            <h1 className="text-5xl md:text-7xl font-heading font-bold leading-tight mb-4">
-              Discover Your Next Campus Experience
+            <h1 className="text-5xl md:text-7xl font-heading font-bold leading-tight mb-4 tracking-tight drop-shadow-md">
+              Discover Your Next <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-400">Campus Experience</span>
             </h1>
-            <p className="text-xl md:text-2xl text-white/90 font-light max-w-3xl mx-auto">
+            <p className="text-lg md:text-2xl text-white/95 font-light max-w-3xl mx-auto drop-shadow">
               The central hub for all ITM SLS Baroda University events, workshops, and activities.
             </p>
           </motion.div>
 
-          {/* Search Bar */}
-          <SearchBar />
+          {/* Search Bar Container with Glassmorphism */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="max-w-2xl mx-auto p-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl"
+          >
+            <SearchBar />
+          </motion.div>
 
           {/* CTA Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center pt-4"
+            className="flex flex-col sm:flex-row gap-4 justify-center pt-2"
           >
             <Link href="/events">
-              <Button size="lg" className="text-lg px-8 h-14 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30" data-testid="button-browse-events">
-                Browse Events <ArrowRight className="ml-2 h-5 w-5" />
+              <Button size="lg" className="text-lg px-8 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/20" data-testid="button-browse-events">
+                Browse Events <ArrowRight className="ml-2 h-5 w-5 animate-pulse" />
               </Button>
             </Link>
             <Link href="/dashboard">
-              <Button size="lg" variant="outline" className="text-lg px-8 h-14 bg-white/10 backdrop-blur border-white/30 text-white hover:bg-white/20" data-testid="button-organize-event">
+              <Button size="lg" variant="outline" className="text-lg px-8 h-14 bg-white/5 backdrop-blur border-white/20 text-white hover:bg-white/10 hover:border-white/30" data-testid="button-organize-event">
                 Organize Event
               </Button>
             </Link>
           </motion.div>
 
-          {/* Quick Stats */}
+          {/* Quick Stats Grid */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.8 }}
-            className="flex flex-wrap justify-center gap-8 pt-8 text-white/80"
+            className="grid grid-cols-3 divide-x divide-white/10 max-w-md mx-auto pt-6 text-white/80"
           >
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              <span className="text-sm">{allEvents.length}+ Events</span>
+            <div className="flex flex-col items-center">
+              <TrendingUp className="h-5 w-5 text-blue-400 mb-1" />
+              <span className="text-sm font-semibold">{eventsList.length}+ Events</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              <span className="text-sm">{allEvents.reduce((sum, e) => sum + e.attendees, 0)}+ Attendees</span>
+            <div className="flex flex-col items-center">
+              <Users className="h-5 w-5 text-indigo-400 mb-1" />
+              <span className="text-sm font-semibold">{eventsList.reduce((sum: number, e: Event) => sum + e.attendees, 0)}+ RSVPs</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Star className="h-5 w-5" />
-              <span className="text-sm">4.7 Avg Rating</span>
+            <div className="flex flex-col items-center">
+              <Star className="h-5 w-5 text-pink-400 mb-1" />
+              <span className="text-sm font-semibold">4.8 Rating</span>
             </div>
           </motion.div>
         </div>
@@ -105,7 +126,7 @@ export default function Home() {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {featuredEvents.map((event) => (
+          {featuredEvents.map((event: Event) => (
             <EventCard key={event.id} event={event} />
           ))}
         </div>
@@ -152,7 +173,7 @@ export default function Home() {
               >
                 <h3 className="text-2xl font-heading font-bold mb-6">Trending Events</h3>
                 <div className="grid md:grid-cols-2 gap-6">
-                  {featuredEvents.slice(0, 2).map((event) => (
+                  {featuredEvents.slice(0, 2).map((event: Event) => (
                     <EventCard key={event.id} event={event} />
                   ))}
                 </div>

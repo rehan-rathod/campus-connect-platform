@@ -1,17 +1,19 @@
-import { getEvents } from "@/lib/mockData";
+import { useGetEvents } from "@/lib/api";
 import { EventCard } from "./EventCard";
 import { useAuth } from "@/hooks/use-auth";
 import { motion } from "framer-motion";
 
 export function RecommendedEvents() {
   const { user } = useAuth();
+  const { data: allEvents, isLoading } = useGetEvents("approved");
 
-  // Get recommendations based on user role/interests
-  const allEvents = getEvents({ status: "approved" });
+  if (isLoading) return null;
+
+  const eventsList = allEvents || [];
   
-  // Mock recommendation algorithm: if attendee, show by rating
-  const recommendations = allEvents
-    .sort((a, b) => b.avgRating - a.avgRating)
+  // Recommendations based on user role/interests or rating
+  const recommendations = [...eventsList]
+    .sort((a: any, b: any) => (b.avgRating || 0) - (a.avgRating || 0))
     .slice(0, 3);
 
   if (recommendations.length === 0) return null;

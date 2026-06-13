@@ -119,13 +119,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/:id", authenticateToken, async (req, res) => {
+  app.get("/api/users/:id/events", authenticateToken, async (req, res) => {
     try {
-      const user = await storage.getUser(req.params.id);
-      if (!user) return res.status(404).json({ error: "User not found" });
-      res.json(user);
+      const userId = req.params.id;
+      const allEvents = await storage.getAllEvents();
+      const registeredEvents = [];
+      for (const event of allEvents) {
+        const reg = await storage.getUserEventRegistration(event.id, userId);
+        if (reg) {
+          registeredEvents.push({
+            ...event,
+            registrationStatus: reg.status,
+          });
+        }
+      }
+      res.json(registeredEvents);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch user" });
+      res.status(500).json({ error: "Failed to fetch user events" });
     }
   });
 
@@ -153,11 +163,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const eventAttendees = await storage.getEventAttendees(event.id);
       const eventReviews = await storage.getEventReviews(event.id);
       
+      const attendeesWithUser = await Promise.all(
+        eventAttendees.map(async (a) => {
+          const u = await storage.getUser(a.userId);
+          return {
+            ...a,
+            name: u ? u.name : "Anonymous",
+            email: u ? u.email : "",
+          };
+        })
+      );
+
+      const reviewsWithUser = await Promise.all(
+        eventReviews.map(async (r) => {
+          const u = await storage.getUser(r.userId);
+          return {
+            ...r,
+            userName: u ? u.name : "Anonymous",
+          };
+        })
+      );
+      
       res.json({
         ...event,
-        attendeeList: eventAttendees.filter(a => a.status === "registered"),
-        waitlist: eventAttendees.filter(a => a.status === "waitlist"),
-        reviews: eventReviews,
+        attendeeList: attendeesWithUser.filter(a => a.status === "registered" || a.status === "checked-in"),
+        waitlist: attendeesWithUser.filter(a => a.status === "waitlist"),
+        reviews: reviewsWithUser,
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch event" });
@@ -323,7 +354,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const limit = parseInt(req.query.limit as string) || 10;
       const recentActivities = await storage.getRecentActivities(limit);
-      res.json(recentActivities);
+      
+      const activitiesWithUser = await Promise.all(
+        recentActivities.map(async (act) => {
+          const user = await storage.getUser(act.userId);
+          return {
+            ...act,
+            userName: user ? user.name : "Anonymous",
+          };
+        })
+      );
+      
+      res.json(activitiesWithUser);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch activities" });
     }

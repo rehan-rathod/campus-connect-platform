@@ -1,4 +1,4 @@
-import { Event } from "@/lib/mockData";
+import { type Event } from "@shared/schema";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, MapPin, Users } from "lucide-react";
@@ -12,12 +12,18 @@ interface EventCardProps {
 }
 
 export function EventCard({ event }: EventCardProps) {
-  const statusColors = {
+  const statusColors: Record<string, string> = {
     approved: "bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-500/20 border-green-500/20",
     pending: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-500/20 border-yellow-500/20",
     rejected: "bg-red-500/10 text-red-700 dark:text-red-400 hover:bg-red-500/20 border-red-500/20",
     cancelled: "bg-gray-500/10 text-gray-700 dark:text-gray-400 hover:bg-gray-500/20 border-gray-500/20",
   };
+
+  const eventDate = typeof event.date === "string" || typeof event.date === "number" 
+    ? new Date(event.date) 
+    : event.date;
+
+  const eventImage = event.image || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d";
 
   return (
     <motion.div
@@ -25,15 +31,15 @@ export function EventCard({ event }: EventCardProps) {
       transition={{ type: "spring", stiffness: 300 }}
     >
       <Link href={`/event/${event.id}`}>
-        <Card className="h-full overflow-hidden hover:shadow-md transition-shadow cursor-pointer border-border/50">
+        <Card className="h-full overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer border-border/50 bg-card/65 backdrop-blur-md">
           <div className="aspect-video w-full overflow-hidden relative">
             <img
-              src={event.image}
+              src={eventImage}
               alt={event.title}
               className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
             />
             <Badge 
-              className={`absolute top-2 right-2 capitalize backdrop-blur-sm shadow-sm ${statusColors[event.status]}`}
+              className={`absolute top-2 right-2 capitalize backdrop-blur-sm shadow-sm ${statusColors[event.status] || "bg-muted"}`}
               variant="outline"
             >
               {event.status}
@@ -57,7 +63,7 @@ export function EventCard({ event }: EventCardProps) {
             <div className="flex flex-col gap-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-primary" />
-                <span>{format(event.date, "PPP 'at' p")}</span>
+                <span>{eventDate ? format(eventDate, "PPP 'at' p") : "No Date"}</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-primary" />

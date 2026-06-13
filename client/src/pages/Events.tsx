@@ -1,10 +1,10 @@
-import { getEvents } from "@/lib/mockData";
+import { useGetEvents } from "@/lib/api";
 import { EventCard } from "@/components/domain/EventCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { Search, Filter, Calendar, Grid, List } from "lucide-react";
+import { Search, Filter, Calendar, Grid, List, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
@@ -13,9 +13,19 @@ export default function Events() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
-  const allEvents = getEvents({ status: "approved" });
+  const { data: allEvents, isLoading } = useGetEvents("approved");
   
-  const filteredEvents = allEvents.filter(event => {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const eventsList = allEvents || [];
+  
+  const filteredEvents = eventsList.filter((event: any) => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           event.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === "all" || event.category === categoryFilter;
@@ -132,7 +142,7 @@ export default function Events() {
               : "grid-cols-1"
           }`}
         >
-          {filteredEvents.map((event, index) => (
+          {filteredEvents.map((event: any, index: number) => (
             <motion.div
               key={event.id}
               initial={{ opacity: 0, y: 20 }}

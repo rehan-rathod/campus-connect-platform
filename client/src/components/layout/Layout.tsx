@@ -10,16 +10,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Calendar, Menu, User, LogOut, Map } from "lucide-react";
+import { Bell, Calendar, Menu, User, LogOut, Map, Sun, Moon } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { MOCK_NOTIFICATIONS } from "@/lib/mockData";
+import { useGetNotifications } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { MobileNav } from "@/components/domain/MobileNav";
+import { useTheme } from "next-themes";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
-  const unreadNotifications = MOCK_NOTIFICATIONS.filter((n) => !n.read).length;
+  const { theme, setTheme } = useTheme();
+
+  const { data: notificationsData } = useGetNotifications(user?.id || "");
+  const notifications = notificationsData || [];
+  const unreadNotifications = notifications.filter((n: any) => !n.read).length;
 
   // Check if we are on the login or register page
   const isAuthPage = location === "/login" || location === "/register";
@@ -117,25 +122,46 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <DropdownMenuContent align="end" className="w-80">
                 <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {MOCK_NOTIFICATIONS.slice(0, 3).map((n) => (
-                  <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-1 p-3">
-                    <div className="flex items-center justify-between w-full">
-                      <span className="font-medium text-xs uppercase text-muted-foreground">
-                        {n.type}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {n.date.toLocaleDateString()}
-                      </span>
-                    </div>
-                    <p className="text-sm">{n.message}</p>
-                  </DropdownMenuItem>
-                ))}
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    No new notifications
+                  </div>
+                ) : (
+                  notifications.slice(0, 3).map((n: any) => {
+                    const dateVal = n.createdAt ? new Date(n.createdAt) : new Date();
+                    return (
+                      <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-1 p-3">
+                        <div className="flex items-center justify-between w-full">
+                          <span className="font-medium text-xs uppercase text-muted-foreground">
+                            {n.type}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {dateVal.toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-sm">{n.message}</p>
+                      </DropdownMenuItem>
+                    );
+                  })
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="justify-center text-primary font-medium">
                   View all
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="mr-1"
+            >
+              <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-muted-foreground hover:text-foreground" />
+              <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-muted-foreground hover:text-foreground" />
+              <span className="sr-only">Toggle Theme</span>
+            </Button>
 
             {/* User Menu / Role Switcher */}
             {user ? (

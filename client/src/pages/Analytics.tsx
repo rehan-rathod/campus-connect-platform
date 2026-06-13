@@ -1,4 +1,4 @@
-import { getEvents } from "@/lib/mockData";
+import { useGetEvents } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -17,12 +17,22 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Download } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Analytics() {
-  const events = getEvents({ status: "approved" });
+  const { data: allEvents, isLoading } = useGetEvents("approved");
   const { toast } = useToast();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const events = allEvents || [];
 
   // Registration trend data
   const trendData = [
@@ -38,8 +48,8 @@ export default function Analytics() {
   // Attendance by category
   const categoryData = events
     .reduce(
-      (acc, event) => {
-        const existing = acc.find((c) => c.name === event.category);
+      (acc: Array<{ name: string; attendees: number; count: number }>, event: any) => {
+        const existing = acc.find((c: any) => c.name === event.category);
         if (existing) {
           existing.attendees += event.attendees;
           existing.count++;
@@ -50,7 +60,7 @@ export default function Analytics() {
       },
       [] as Array<{ name: string; attendees: number; count: number }>
     )
-    .sort((a, b) => b.attendees - a.attendees);
+    .sort((a: any, b: any) => b.attendees - a.attendees);
 
   // Peak hours data
   const peakHoursData = [
@@ -64,9 +74,9 @@ export default function Analytics() {
 
   const stats = [
     { label: "Total Events", value: events.length },
-    { label: "Total Registrations", value: events.reduce((sum, e) => sum + e.attendees, 0) },
-    { label: "Avg Rating", value: (events.reduce((sum, e) => sum + e.avgRating, 0) / events.length).toFixed(1) },
-    { label: "Avg Capacity", value: Math.round(events.reduce((sum, e) => sum + (e.attendees / e.capacity), 0) / events.length * 100) + "%" },
+    { label: "Total Registrations", value: events.reduce((sum: number, e: any) => sum + e.attendees, 0) },
+    { label: "Avg Rating", value: events.length > 0 ? (events.reduce((sum: number, e: any) => sum + e.avgRating, 0) / events.length).toFixed(1) : "0.0" },
+    { label: "Avg Capacity", value: events.length > 0 ? Math.round(events.reduce((sum: number, e: any) => sum + (e.capacity > 0 ? (e.attendees / e.capacity) : 0), 0) / events.length * 100) + "%" : "0%" },
   ];
 
   const colors = ["#1e40af", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6"];
@@ -164,7 +174,7 @@ export default function Analytics() {
                       cy="50%"
                       outerRadius={80}
                     >
-                      {categoryData.map((_, index) => (
+                      {categoryData.map((_: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                       ))}
                     </Pie>
